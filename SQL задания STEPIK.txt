@@ -1211,4 +1211,18 @@ INSERT INTO attempt(student_id, subject_id, date_attempt) VALUES(
 				NOW());  
 				
 	Задание 2:
+	Случайным образом выбрать три вопроса (запрос) по дисциплине, тестирование по которой собирается проходить студент, 
+	занесенный в таблицу attempt последним, и добавить их в таблицу testing. 
+	id последней попытки получить как максимальное значение id из таблицы attempt.
+
+INSERT INTO testing (attempt_id, question_id)
+Select  attempt_id,question_id
+FROM attempt 
+INNER JOIN question USING(subject_id)
+WHERE attempt_id=(SELECT max(attempt_id) from attempt)
+ORDER BY RAND ()
+LIMIT 3
+;
+	
+	Задание 3:
 	
