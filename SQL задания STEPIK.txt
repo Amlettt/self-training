@@ -1225,4 +1225,42 @@ LIMIT 3
 ;
 	
 	Задание 3:
+	Студент прошел тестирование (то есть все его ответы занесены в таблицу testing), далее необходимо вычислить результат(запрос) 
+	и занести его в таблицу attempt для соответствующей попытки.  Результат попытки вычислить как количество правильных ответов, 
+	деленное на 3 (количество вопросов в каждой попытке) и умноженное на 100. Результат округлить до целого.
+
+	Будем считать, что мы знаем id попытки,  для которой вычисляется результат, в нашем случае это 8.
 	
+UPDATE attempt SET result = (SELECT CEILING(SUM(is_correct)/3*100) FROM answer
+INNER JOIN testing USING(answer_id)
+WHERE attempt_id = 8) WHERE attempt_id = 8;
+
+	Задание 4:
+	далить из таблицы attempt все попытки, выполненные раньше 1 мая 2020 года. Также удалить и все соответствующие этим попыткам вопросы 
+	из таблицы testing, которая создавалась следующим запросом:
+	CREATE TABLE testing (
+    testing_id INT PRIMARY KEY AUTO_INCREMENT, 
+    attempt_id INT, 
+    question_id INT, 
+    answer_id INT,
+    FOREIGN KEY (attempt_id)  REFERENCES attempt (attempt_id) ON DELETE CASCADE);
+	
+DELETE FROM attempt WHERE date_attempt < '2020-05-01';
+
+	Задание 5:
+	В институте счастливое событие - студенческая свадьба! Баранов Павел и Яковлева Галина решили соединить себя узами брака и жить дальше вместе долго и счастливо. На первом семейном совете, после долгих криков и оскорблений, было принято два важных решения:
+	1. Галина берёт фамилию мужа.
+	2. Так как они теперь семья и у них должно быть всё поровну, то и результаты всех попыток тестирования у них тоже должны быть одинаковые.
+	Таким образом, ваша задача:
+	1. Первым запросом изменить в базе фамилию Галины.
+	2. Вторым запросом изменить результаты тестирования в таблице attempt для членов новой семьи, выставив им за каждую попытку средний результат всех их попыток вместе взятых.
+
+SELECT * FROM student;
+UPDATE student set name_student = 'Баранова Галина' WHERE name_student = 'Яковлева Галина';
+SELECT * FROM student;
+SELECT * FROM attempt;
+
+UPDATE attempt set result = (SELECT* FROM(SELECT CEILING(AVG(result)) FROM attempt INNER JOIN student USING(student_id) WHERE name_student like 'Баранов%') AS n)
+WHERE student_id in (SELECT* FROM(SELECT student_id FROM student WHERE name_student like 'Баранов%') AS v);
+
+SELECT * FROM attempt;
