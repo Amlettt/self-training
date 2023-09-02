@@ -1264,3 +1264,37 @@ UPDATE attempt set result = (SELECT* FROM(SELECT CEILING(AVG(result)) FROM attem
 WHERE student_id in (SELECT* FROM(SELECT student_id FROM student WHERE name_student like 'Баранов%') AS v);
 
 SELECT * FROM attempt;
+
+
+
+
+Раздел 3.2
+
+	Задание 1:
+	Вывести абитуриентов, которые хотят поступать на образовательную программу «Мехатроника и робототехника» в отсортированном по фамилиям виде.
+	
+SELECT name_enrollee FROM enrollee
+INNER JOIN program_enrollee USING(enrollee_id)
+INNER JOIN program USING(program_id)
+WHERE name_program = "Мехатроника и робототехника"
+ORDER BY 1;
+
+	Задание 2:
+	Вывести образовательные программы, на которые для поступления необходим предмет «Информатика». Программы отсортировать в обратном алфавитном порядке.
+	
+SELECT name_program FROM program
+INNER JOIN program_subject USING(program_id)
+INNER JOIN subject USING(subject_id)
+WHERE name_subject = "Информатика"
+ORDER BY 1 DESC;
+
+	Задание 3:
+	Выведите количество абитуриентов, сдавших ЕГЭ по каждому предмету, максимальное, минимальное и среднее значение баллов по предмету ЕГЭ. 
+	Вычисляемые столбцы назвать Количество, Максимум, Минимум, Среднее. Информацию отсортировать по названию предмета в алфавитном порядке, 
+	среднее значение округлить до одного знака после запятой.
+	
+SELECT name_subject, COUNT(result) AS Количество, MAX(result) AS Максимум, MIN(result) AS Минимум, ROUND(AVG(result), 1) AS Среднее
+FROM subject
+INNER JOIN enrollee_subject USING(subject_id)
+GROUP BY name_subject 
+ORDER BY 1;
