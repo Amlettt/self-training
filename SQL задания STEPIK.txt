@@ -1318,3 +1318,27 @@ WHERE plan in (SELECT MAX(plan) FROM program)
 	Задание 6:
 	Посчитать, сколько дополнительных баллов получит каждый абитуриент. Столбец с дополнительными баллами назвать Бонус. 
 	Информацию вывести в отсортированном по фамилиям виде.
+
+SELECT name_enrollee, SUM(IF(bonus IS NULL, 0, bonus)) AS Бонус
+FROM enrollee
+LEFT JOIN enrollee_achievement USING(enrollee_id)
+LEFT JOIN achievement USING(achievement_id)
+GROUP BY name_enrollee
+ORDER BY 1;
+
+	Задание 7:
+	Выведите сколько человек подало заявление на каждую образовательную программу и конкурс на нее (число поданных заявлений деленное 
+	на количество мест по плану), округленный до 2-х знаков после запятой. В запросе вывести название факультета, к которому относится 
+	образовательная программа, название образовательной программы, план набора абитуриентов на образовательную программу (plan), 
+	количество поданных заявлений (Количество) и Конкурс. Информацию отсортировать в порядке убывания конкурса.
+	
+SELECT name_department, name_program, plan, COUNT(enrollee_id) AS Количество, ROUND((COUNT(enrollee_id)/plan), 2) AS Конкурс
+FROM department
+INNER JOIN program USING(department_id)
+INNER JOIN program_enrollee USING(program_id)
+GROUP BY name_department, name_program, plan
+ORDER BY 5 DESC;
+
+	Задание 8:
+	Вывести образовательные программы, на которые для поступления необходимы предмет «Информатика» и «Математика» в отсортированном по названию программ виде.
+
