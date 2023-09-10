@@ -1268,7 +1268,7 @@ SELECT * FROM attempt;
 
 
 
-Раздел 3.2
+Раздел 3.3
 
 	Задание 1:
 	Вывести абитуриентов, которые хотят поступать на образовательную программу «Мехатроника и робототехника» в отсортированном по фамилиям виде.
@@ -1355,7 +1355,7 @@ ORDER BY 1;
 	В результат включить название образовательной программы, фамилию и имя абитуриента, а также столбец с суммой баллов, который назвать itog. 
 	Информацию вывести в отсортированном сначала по образовательной программе, а потом по убыванию суммы баллов виде.
 	
-SSELECT name_program, name_enrollee, SUM(result) AS itog
+SELECT name_program, name_enrollee, SUM(result) AS itog
 FROM enrollee
 INNER JOIN program_enrollee USING(enrollee_id)
 INNER JOIN program USING(program_id)
@@ -1364,3 +1364,76 @@ INNER JOIN subject USING(subject_id)
 INNER JOIN enrollee_subject ON enrollee_subject.subject_id = subject.subject_id AND enrollee_subject.enrollee_id = enrollee.enrollee_id
 GROUP BY name_program, name_enrollee
 ORDER BY 1, 3 DESC;
+
+	Задание 10:
+	Вывести название образовательной программы и фамилию тех абитуриентов, которые подавали документы на эту образовательную программу, 
+	но не могут быть зачислены на нее. Эти абитуриенты имеют результат по одному или нескольким предметам ЕГЭ, 
+	необходимым для поступления на эту образовательную программу, меньше минимального балла. 
+	Информацию вывести в отсортированном сначала по программам, а потом по фамилиям абитуриентов виде.
+	
+SELECT name_program, name_enrollee
+FROM enrollee
+INNER JOIN program_enrollee USING(enrollee_id)
+INNER JOIN program USING(program_id)
+INNER JOIN program_subject USING(program_id)
+INNER JOIN subject USING(subject_id)
+INNER JOIN enrollee_subject ON enrollee_subject.subject_id = subject.subject_id AND enrollee_subject.enrollee_id = enrollee.enrollee_id
+WHERE result < min_result
+GROUP BY name_program, name_enrollee
+ORDER BY 1, 2;
+
+	Задание 11:
+	Вывести по каждому предмету: минимум, максимум, среднее и количество сдавших предмет.
+	Необходимо учесть:
+	1) Все названия на русском и начинаются с маленькой буквы используем функцию LOWER.
+	2) Округление до целого числа.
+	3) Использовать таблицы subject и enrollee_subject.
+	4) Сортировать по убыванию среднего балла.
+	
+SELECT LOWER(name_subject) AS предмет, MIN(result) AS минимум, MAX(result) AS максимум, ROUND(AVG(result),0) AS среднее, COUNT(result) AS количество
+FROM subject
+INNER JOIN enrollee_subject USING(subject_id)
+GROUP BY name_subject
+ORDER BY 4 DESC;
+
+
+
+
+Раздел 3.4
+
+	Задание 1:
+	Создать вспомогательную таблицу applicant,  куда включить id образовательной программы, id абитуриента, сумму баллов абитуриентов (столбец itog)
+	в отсортированном сначала по id образовательной программы, а потом по убыванию суммы баллов виде (использовать запрос из предыдущего урока).
+
+CREATE TABLE applicant AS
+    SELECT program_id, enrollee_id, SUM(result) AS itog
+    FROM program_enrollee
+    INNER JOIN program_subject USING(program_id)
+    INNER JOIN enrollee_subject USING(enrollee_id, subject_id)
+    GROUP BY program_id, enrollee_id
+    ORDER BY 1, 3 DESC;
+	
+	Задание 2:
+	Из таблицы applicant,  созданной на предыдущем шаге, удалить записи, если абитуриент на выбранную образовательную программу 
+	не набрал минимального балла хотя бы по одному предмету (использовать запрос из предыдущего урока).
+	
+DELETE FROM applicant WHERE (program_id, enrollee_id) in
+    (SELECT pe.program_id, pe.enrollee_id
+        FROM program_enrollee AS pe
+        INNER JOIN program_subject AS ps ON pe.program_id = ps.program_id
+        INNER JOIN enrollee_subject AS es ON pe.enrollee_id = es.enrollee_id AND ps.subject_id = es.subject_id
+        WHERE es.result < ps.min_result);
+		
+		Задание 3:
+		Повысить итоговые баллы абитуриентов в таблице applicant на значения дополнительных баллов (использовать запрос из предыдущего урока).
+		
+UPDATE applicant AS a
+INNER JOIN (SELECT f.enrollee_id, SUM(IF(f2.bonus IS NULL, 0, f2.bonus)) AS Бонус
+FROM enrollee AS f
+LEFT JOIN enrollee_achievement AS f1 ON f.enrollee_id = f1.enrollee_id
+LEFT JOIN achievement AS f2 ON f1.achievement_id = f2.achievement_id
+GROUP BY f.enrollee_id) AS b ON a.enrollee_id = b.enrollee_id
+SET a.itog = a.itog + b.Бонус
+WHERE a.enrollee_id = b.enrollee_id;
+
+	
